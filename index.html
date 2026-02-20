@@ -1,27 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <base target="_top">
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 0; margin: 0; background-color: #f8f9fa; color: #333; }
-    .header { background-color: #1a73e8; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .container { padding: 15px; }
-    label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #555; }
-    select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; background: white; }
-    .upload-zone { border: 2px dashed #1a73e8; border-radius: 8px; padding: 30px 15px; text-align: center; background-color: white; cursor: pointer; margin-bottom: 15px; }
-    #status { margin-bottom: 10px; font-size: 13px; text-align: center; min-height: 20px; }
-    .table-wrapper { overflow-x: auto; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; display: none; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    th { background-color: #1a73e8; color: white; padding: 10px; text-align: left; position: sticky; top: 0; }
-    td { padding: 8px; border-bottom: 1px solid #eee; }
-    .btn-group { margin-top: 15px; }
-    button { width: 100%; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-    #exportBtn { background-color: #1e8e3e; color: white; display: none; }
-    #showDataBtn { background-color: #f39c12; color: white; display: none; }
-    .btn-clear { background-color: #d93025; color: white; }
-    #loader { display: none; text-align: center; padding: 10px; font-style: italic; color: #666; }
-    .app-footer { margin-top: 30px; padding: 15px 10px; font-size: 11px; color: #95a5a6; border-top: 1px solid #e0e0e0; text-align: center; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KBI Convert Order - Vercel Edition</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="header">APLIKASI CONVERT ORDER CUSTOMER >>> PT. KBI</div>
@@ -36,17 +19,25 @@
       <option value="TMMIN">6. TMMIN (.txt)</option>
       <option value="HINO">7. HINO (.csv)</option>
     </select>
+
     <div class="upload-zone" id="drop-zone">📤 Upload / Paste File<input type="file" id="fileInput" style="display:none"></div>
-    <div id="loader">Sedang Memproses... ⏳</div><div id="status"></div>
-    <div class="table-wrapper" id="tableWrapper">
-      <table id="previewTable"><thead><tr><th>DN</th><th>Sebango</th><th>Part Number</th><th>Qty</th><th>Date</th><th>Docking</th><th>Cycle</th><th>Time</th></tr></thead><tbody></tbody></table>
-    </div>
-    <div id="filterContainer" style="display:none; margin-top: 15px; background: #fffee4; padding: 10px; border-radius: 4px; border: 1px solid #1a73e8;">
-      <label id="filterLabel" style="color: #1a73e8;">OPSI EXPORT:</label>
+    
+    <div id="loader">Sedang Memproses... ⏳</div>
+    <div id="status"></div>
+
+    <div id="filterContainer">
+      <label id="filterLabel">OPSI EXPORT:</label>
       <select id="filterSelect">
-        <option value="DENGAN_FILTER" id="filterOptionText">Tanpa Part Khusus</option>
         <option value="ALL">Download Semua Data</option>
+        <option value="DENGAN_FILTER" id="filterOptionText">Tanpa Part Khusus</option>
       </select>
+    </div>
+
+    <div class="table-wrapper" id="tableWrapper">
+      <table id="previewTable">
+        <thead><tr><th>DN</th><th>Sebango</th><th>Part Number</th><th>Qty</th><th>Date</th><th>Docking</th><th>Cycle</th><th>Time</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
 
     <div class="btn-group">
@@ -55,117 +46,12 @@
       <button class="btn-clear" onclick="resetApp()">🧹 Bersihkan Data Sesi</button>
     </div>
   </div>
+
   <div class="app-footer">
-    <span class="footer-version">Aplikasi Convert Order Customer v1.0</span><br>
-    &copy; 2026 - Internal System Administrasi Logistic KBI | Developed by Mas_Arie [WA:0812-2119-0018]
+    <span>Aplikasi Convert Order v2.0 - Vercel</span><br>
+    &copy; 2026 - Internal System KBI | Developed by Mas_Arie
   </div>
 
-  <script>
-    const tableBody = document.querySelector('#previewTable tbody');
-    const tableWrapper = document.getElementById('tableWrapper');
-    const statusDiv = document.getElementById('status');
-    const loader = document.getElementById('loader');
-
-    document.getElementById('drop-zone').onclick = () => document.getElementById('fileInput').click();
-    document.getElementById('fileInput').onchange = e => processFile(e.target.files[0]);
-
-    // Handle Paste (Suzuki Image & Excel Text)
-    document.addEventListener('paste', e => {
-      const items = e.clipboardData.items;
-      const cust = document.getElementById('custSelect').value;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-          processFile(items[i].getAsFile()); // Untuk Paste QR Suzuki
-        } else if (items[i].kind === "string" && items[i].type === "text/plain") {
-          items[i].getAsString(text => { if (text.includes('\t')) processManualPaste(cust, text); });
-        }
-      }
-    });
-
-    function processManualPaste(customer, rawText) {
-      statusDiv.innerHTML = "Menyimpan data... ⏳"; loader.style.display = "block";
-      google.script.run.withSuccessHandler(res => {
-        loader.style.display = "none"; statusDiv.innerHTML = `<b style="color:green">✅ ${res.message}</b>`;
-        document.getElementById('showDataBtn').style.display = "block";
-      }).withFailureHandler(err => { loader.style.display = "none"; statusDiv.innerHTML = `<div style="color:red">Error: ${err.message}</div>`; }).handleManualPaste(customer, rawText);
-    }
-
-    function processFile(file) {
-      if (!file) return;
-      const cust = document.getElementById('custSelect').value; loader.style.display = "block";
-      const reader = new FileReader();
-      reader.onload = e => {
-        google.script.run.withSuccessHandler(res => {
-          loader.style.display = "none"; statusDiv.innerHTML = `<b style="color:green">✅ ${res.message}</b>`;
-          document.getElementById('showDataBtn').style.display = "block";
-        }).withFailureHandler(err => { loader.style.display = "none"; statusDiv.innerHTML = `<div style="color:red">Error: ${err.message}</div>`; }).handleRouter(cust, e.target.result, file.name);
-      };
-      reader.readAsDataURL(file);
-    }
-
-    /** 👁️ TAMPILKAN DATA: Sekarang mengirim pilihan customer ke server */
-function fetchData() {
-      const cust = document.getElementById('custSelect').value;
-      loader.style.display = "block";
-      tableBody.innerHTML = ""; 
-      
-      google.script.run
-        .withSuccessHandler(res => {
-          loader.style.display = "none";
-          if (res.success && res.rows.length > 0) {
-            tableWrapper.style.display = "block";
-            
-            // Logika Tampilan Filter
-            const filterDiv = document.getElementById('filterContainer');
-            const optText = document.getElementById('filterOptionText');
-            
-            if (cust === "SUZUKI") {
-              filterDiv.style.display = "block";
-              optText.innerText = "Tanpa Part OPUCO";
-            } else if (cust === "ADM_SAP") {
-              filterDiv.style.display = "block";
-              optText.innerText = "Tanpa Part KBI-2";
-            } else {
-              filterDiv.style.display = "none";
-            }
-            
-            res.rows.forEach(r => {
-              const tr = document.createElement('tr');
-              r.forEach(c => { 
-                const td = document.createElement('td'); 
-                td.innerText = c || ""; 
-                tr.appendChild(td); 
-              });
-              tableBody.appendChild(tr);
-            });
-            document.getElementById('exportBtn').style.display = "block";
-            document.getElementById('showDataBtn').style.display = "none";
-          } else {
-            statusDiv.innerHTML = `<b style="color:orange">⚠️ Tidak ada data riwayat untuk ${cust}</b>`;
-          }
-        })
-        .getLatestRows(cust);
-    }
-
-    function doDownload() {
-      const filterType = document.getElementById('filterSelect').value;
-      statusDiv.innerHTML = "Menyiapkan file... ⏳";
-      google.script.run.withSuccessHandler(obj => {
-        const link = document.createElement('a'); 
-        link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + obj.data;
-        link.download = obj.name; 
-        link.click(); 
-        statusDiv.innerHTML = `<b style="color:green">✅ Download Selesai!</b>`;
-      }).getDownloadUrl(filterType);
-    }
-
-    function resetApp() {
-      if (confirm("Hapus sesi?")) {
-        google.script.run.withSuccessHandler(msg => {
-          tableBody.innerHTML = ""; tableWrapper.style.display = "none"; statusDiv.innerHTML = msg; document.getElementById('exportBtn').style.display = "none";
-        }).clearSession();
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
