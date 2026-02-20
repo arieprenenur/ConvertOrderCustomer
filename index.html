@@ -24,22 +24,19 @@
     
     <div id="loader">Sedang Memproses... ⏳</div>
     <div id="status"></div>
-
-    <div id="filterContainer">
-      <label id="filterLabel">OPSI EXPORT:</label>
-      <select id="filterSelect">
-        <option value="ALL">Download Semua Data</option>
-        <option value="DENGAN_FILTER" id="filterOptionText">Tanpa Part Khusus</option>
-      </select>
-    </div>
-
     <div class="table-wrapper" id="tableWrapper">
       <table id="previewTable">
         <thead><tr><th>DN</th><th>Sebango</th><th>Part Number</th><th>Qty</th><th>Date</th><th>Docking</th><th>Cycle</th><th>Time</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
-
+<div id="filterContainer">
+      <label id="filterLabel">OPSI EXPORT:</label>
+      <select id="filterSelect">
+        <option value="ALL">Download Semua Data</option>
+        <option value="DENGAN_FILTER" id="filterOptionText">Tanpa Part Khusus</option>
+      </select>
+    </div>
     <div class="btn-group">
       <button id="showDataBtn" onclick="fetchData()">👁️ TAMPILKAN PREVIEW DATA</button>
       <button id="exportBtn" onclick="doDownload()">📥 EXPORT KE EXCEL (.XLSX)</button>
@@ -54,4 +51,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
