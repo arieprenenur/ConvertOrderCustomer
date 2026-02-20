@@ -40,25 +40,26 @@ async function fetchData() {
     const tableBody = document.querySelector('#previewTable tbody');
     tableBody.innerHTML = "";
     document.getElementById('tableWrapper').style.display = "block";
+    // Isi Tabel
+    res.rows.forEach(r => {
+      const tr = document.createElement('tr');
+      r.forEach(c => { const td = document.createElement('td'); td.innerText = c || ""; tr.appendChild(td); });
+      tableBody.appendChild(tr);
+    });
     
     // Logika UI Filter Kuning
     const filterDiv = document.getElementById('filterContainer');
     const optText = document.getElementById('filterOptionText');
     if (cust === "SUZUKI") {
       filterDiv.style.display = "block";
-      optText.innerText = "Tanpa Part Opuco (Kolom A Exclude)";
+      optText.innerText = "Tanpa Part Opuco";
     } else if (cust === "ADM_SAP") {
       filterDiv.style.display = "block";
-      optText.innerText = "Tanpa Part KBI-2 (Kolom B Exclude)";
+      optText.innerText = "Tanpa Part KBI-2";
     } else {
       filterDiv.style.display = "none";
     }
 
-    res.rows.forEach(r => {
-      const tr = document.createElement('tr');
-      r.forEach(c => { const td = document.createElement('td'); td.innerText = c || ""; tr.appendChild(td); });
-      tableBody.appendChild(tr);
-    });
     document.getElementById('exportBtn').style.display = "block";
   }
 }
@@ -132,3 +133,4 @@ function handleResponse(res) {
     document.getElementById('showDataBtn').style.display = "block";
   }
 }
+
