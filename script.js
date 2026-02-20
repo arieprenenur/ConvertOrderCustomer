@@ -82,4 +82,53 @@ async function resetApp() {
     const res = await callAPI({ action: "clear" });
     location.reload();
   }
+
+}
+// Handle Paste (Suzuki Image & Excel Text)
+document.addEventListener('paste', async (e) => {
+  const items = e.clipboardData.items;
+  const cust = document.getElementById('custSelect').value;
+  
+  for (let i = 0; i < items.length; i++) {
+    // 1. Jika yang di-paste adalah GAMBAR (QR Suzuki)
+    if (items[i].type.indexOf("image") !== -1) {
+      const blob = items[i].getAsFile();
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        document.getElementById('loader').style.display = "block";
+        const res = await callAPI({
+          action: "upload",
+          customer: cust,
+          base64Data: event.target.result,
+          fileName: "pasted_image.png"
+        });
+        handleResponse(res);
+      };
+      reader.readAsDataURL(blob);
+    } 
+    // 2. Jika yang di-paste adalah TEKS (Copy dari Excel)
+    else if (items[i].kind === "string" && items[i].type === "text/plain") {
+      items[i].getAsString(async (text) => {
+        if (text.includes('\t')) { // Cek apakah format tabulasi Excel
+          document.getElementById('loader').style.display = "block";
+          const res = await callAPI({
+            action: "paste_text", // Kita tambahkan action baru
+            customer: cust,
+            rawText: text
+          });
+          handleResponse(res);
+        }
+      });
+    }
+  }
+});
+
+// Fungsi pembantu untuk menangani hasil API
+function handleResponse(res) {
+  document.getElementById('loader').style.display = "none";
+  const statusDiv = document.getElementById('status');
+  statusDiv.innerHTML = res.success ? `<b style="color:green">✅ ${res.message}</b>` : `<div style="color:red">Error: ${res.message}</div>`;
+  if (res.success) {
+    document.getElementById('showDataBtn').style.display = "block";
+  }
 }
